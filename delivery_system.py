@@ -5,6 +5,7 @@ from datetime import datetime
 VALID_STATUSES = ["placed", "cooking", "out_for_delivery", "delivered"]
 DEFAULT_MENU = {"pizza": 250, "burger": 150, "fries": 90, "coke": 40}
 
+
 class OrderQueue:
     """Holds the orders for one kitchen and the menu prices."""
 
@@ -35,7 +36,12 @@ class OrderQueue:
             raise ValueError(f"not on the menu: {', '.join(unknown)}")
         total = sum(self.menu[i] for i in items)
         order_id = self.next_id
-        self.orders[order_id] = {"customer": customer, "items": items, "total": total, "status": "placed"}
+        self.orders[order_id] = {
+            "customer": customer,
+            "items": items,
+            "total": total,
+            "status": "placed",
+        }
         self.next_id += 1
         return order_id
 
@@ -49,12 +55,14 @@ class OrderQueue:
 
     def daily_revenue(self):
         """Return the total of all delivered orders."""
-        return sum(o["total"] for o in self.orders.values() if o["status"] == "delivered")
+        return sum(o["total"] for o in self.orders.values()
+                   if o["status"] == "delivered")
 
     def backup_orders(self, file="orders.json"):
         """Write the orders to disk as JSON."""
         with open(file, "w", encoding="utf-8") as handle:
-            json.dump({"next_id": self.next_id, "orders": self.orders}, handle)
+            json.dump({"next_id": self.next_id, "orders": self.orders},
+                      handle)
 
     def restore_orders(self, file="orders.json"):
         """Load orders from disk (JSON keys are strings, so convert to int)."""
@@ -68,18 +76,27 @@ class OrderQueue:
         for order_id, o in self.orders.items():
             print(order_id, o["customer"], o["status"], o["total"])
 
+
 def main():
     """Run the demo scenario."""
     queue = OrderQueue()
     queue.read_menu_config()
-    attempts = [("Asha", ["pizza", "coke"]), ("Ravi", ["burger", "sushi"]), ("", [])]
+    attempts = [
+        ("Asha", ["pizza", "coke"]),
+        ("Ravi", ["burger", "sushi"]),
+        ("", []),
+    ]
     ids = []
     for customer, items in attempts:
         try:
             ids.append(queue.create_order(customer, items))
         except ValueError as err:
             print("Order rejected:", err)
-    updates = [(ids[0], "delivered"), (ids[0], "teleported"), (42, "delivered")]
+    updates = [
+        (ids[0], "delivered"),
+        (ids[0], "teleported"),
+        (42, "delivered"),
+    ]
     for order_id, status in updates:
         try:
             queue.update_order_status(order_id, status)
@@ -89,6 +106,7 @@ def main():
     queue.backup_orders()
     queue.restore_orders()
     queue.print_queue()
+
 
 if __name__ == "__main__":
     main()
